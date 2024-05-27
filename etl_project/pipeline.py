@@ -1,3 +1,5 @@
-# from dotenv
+import pandas as pd
+from dotenv import load_dotenv
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    load_dotenv()

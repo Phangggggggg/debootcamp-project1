@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Table, MetaData
+from sqlalchemy import create_engine, Table, MetaData,Column
 from sqlalchemy.engine import URL, CursorResult
 from sqlalchemy.dialects import postgresql
 
@@ -36,11 +36,16 @@ class PostgreSqlClient:
     def select_all(self, table: Table) -> list[dict]:
         return [dict(row) for row in self.engine.execute(table.select()).all()]
 
-    def create_table(self, metadata: MetaData) -> None:
-        """
-        Creates table provided in the metadata object
-        """
-        metadata.create_all(self.engine)
+    def create_table(self, table_name: str,metadata: MetaData) -> None:
+        existing_table = metadata.tables[table_name]
+        new_metadata = MetaData()
+        columns = [
+            Column(column.name, column.type, primary_key=column.primary_key)
+            for column in existing_table.columns
+        ]
+        new_table = Table(table_name, new_metadata, *columns)
+        new_metadata.create_all(bind=self.engine)
+        return new_metadata
 
     def drop_table(self, table_name: str) -> None:
         self.engine.execute(f"drop table if exists {table_name};")
