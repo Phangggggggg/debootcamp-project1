@@ -20,7 +20,7 @@ class AirPollutionApiClient:
         self.api_key = api_key
         self.base_url = "http://api.openweathermap.org/data/2.5/air_pollution"
         
-    def get_current_data(self,lat:int,long:int):
+    def get_current_data(self,lat:int,long:int) -> json:
         """
         Retrieve current air pollution data for a specific location.
 
@@ -41,7 +41,7 @@ class AirPollutionApiClient:
         return response.json()['list']
     
     
-    def get_historical_data(self,lat:int,long:int,start:int,end:int):
+    def get_historical_data(self,lat:int,long:int,start:int,end:int) -> json:
         """
         Retrieve historical air pollution data for a specific location within a specified time range.
 
@@ -65,24 +65,3 @@ class AirPollutionApiClient:
     
   
 
-
-
-# load_dotenv()
-# start_date_str = "2020-11-24"
-# end_date_str = "2020-12-24"
-# date_format = "%Y-%m-%d"
-# lat = 13.7563
-# long = 100.5018
-# start = int(datetime.strptime(start_date_str, date_format).timestamp())
-# end = int(datetime.strptime(end_date_str, date_format).timestamp())
-# api_key = os.environ.get('API_KEY')
-# api_clients = AirPollutionApiClients(api_key=api_key)
-# api_clients.get_historical_data(
-#     lat=lat,
-#     long=long,
-#     start=start,
-#     end=end
-    
-# )
-        
-    
