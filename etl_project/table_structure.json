@@ -1,0 +1,112 @@
+{
+    "air_pollution": {
+        "columns": [
+            {"name":"lat","type":"DOUBLE PRECISIOM"},
+            {"name":"long","type":"DOUBLE PRECISIOM"},
+            {"name":"air_quality_index","type":"INTEGER"},
+            {"name":"co","type":"DOUBLE PRECISIOM"},
+            {"name":"no", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"no2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"o3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"so2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"pm2_5", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"nh3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"pm10", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"date_time", "type":"DATETIME"},
+            {"name":"created_at", "type":"TIMESTAMP"}
+        ], 
+        "primaryKey": [ "date_time"]
+    },
+    "province": {
+        "columns": [
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"province_name","type":"VARCHAR"},
+            {"name":"district_name","type":"VARCHAR"},
+            {"name":"region_name", "type":"VARCHAR"}, 
+            {"name":"sub_district_name", "type":"VARCHAR"}, 
+            {"name":"lat","type":"DOUBLE PRECISIOM"},
+            {"name":"long","type":"DOUBLE PRECISIOM"}
+        ], 
+        "primaryKey":["lat", "long"]
+    }, 
+    "population": {
+        "columns": [
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}, 
+            {"name":"num_population", "type":"DOUBLE PRECISIOM"}
+        ], 
+        "primaryKey":["year"]
+    }, 
+    "monthly_avg_pollutants_by_provinces": {
+        "columns": [
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"avg_air_quality_index","type":"DOUBLE PRECISIOM"},
+            {"name":"avg_co","type":"DOUBLE PRECISIOM"},
+            {"name":"avg_no", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_no2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_o3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_so2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_pm2_5", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_nh3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_pm10", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"month", "type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}
+        ]
+    }, 
+    "exposure_pollutants_by_population": {
+        "columns": [
+            {"name":"avg_co","type":"DOUBLE PRECISIOM"},
+            {"name":"avg_no", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_no2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_o3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_so2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_pm2_5", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_nh3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"avg_pm10", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_population", "type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}
+        ]
+    },
+    "monthly_regulation_bt_provinces": {
+        "columns": [
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"avg_air_quality_index","type":"DOUBLE PRECISIOM"},
+            {"name":"highest_air_quality_index","type":"DOUBLE PRECISIOM"},
+            {"name":"lowest_air_quality_index", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"month", "type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}
+        ]
+    }, 
+    "monthly_rank_pollutants_by_provinces": {
+        "columns": [
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"rank_co","type":"DOUBLE PRECISIOM"},
+            {"name":"rank_no", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_no2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_o3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_so2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_pm2_5", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_nh3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"rank_pm10", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_co","type":"DOUBLE PRECISIOM"},
+            {"name":"total_no", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_no2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_o3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_so2", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_pm2_5", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_nh3", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"total_pm10", "type":"DOUBLE PRECISIOM"}, 
+            {"name":"month", "type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}
+        ]
+    }, 
+    "air_quality_trend_nexxt_month": {
+        "columns": [
+            {"name":"avg_air_quality_index","type":"DOUBLE PRECISIOM"},
+            {"name":"province_id","type":"INTEGER"},
+            {"name":"air_quality_prev_month","type":"DOUBLE PRECISIOM"},
+            {"name":"month", "type":"INTEGER"},
+            {"name":"year", "type":"INTEGER"}
+        ]
+    }
+}
