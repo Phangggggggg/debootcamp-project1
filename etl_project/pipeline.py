@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import yaml
 import re
 from shapely import Point,MultiPoint
-
 from connectors.postgres import PostgreSqlClient
 import os
 from sqlalchemy import Table, MetaData, Column, Integer, String, Float, DateTime
@@ -99,7 +98,7 @@ def create(
 
 
 # Write multi tables
-def create_multi_table(table_names: list, file_location):
+def create_multi_table(table_names: list, file_location:str,):
     for table_name in table_names:
         metadata = read_table_structure(table_name, file_location)
         create(table_name=table_name, metadata=metadata, postgresql_client=postgresql_client)
@@ -134,6 +133,5 @@ if __name__ == "__main__":
                    'population'
                    ]
 
-    file_location = 'table_structure.json'
     # Create physical table
-    create_multi_table(table_names, file_location)
+    create_multi_table(table_names, pipeline_config['table_structure']['path'])
