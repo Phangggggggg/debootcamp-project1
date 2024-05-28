@@ -1,5 +1,5 @@
 name: "Thai Air Pollution ELT"
 dataset_paths:
   provinces: "etl_project/data/provinces.csv"
-  population: "etl_project/data/population.csv"
+  population: "etl_project/data/population.xlsx"
 
