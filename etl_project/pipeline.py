@@ -234,8 +234,6 @@ def load_df_to_postgres(df:pd.DataFrame, table:str,method:Literal['insert','upse
 
 def run_air_pollution_pipleine():
     
-
-    
     create_multi_table(table_names, pipeline_config['table_structure']['path'])
     if postgresql_client.count_table(table_name='province') == 0:
         province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
