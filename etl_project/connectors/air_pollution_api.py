@@ -1,9 +1,11 @@
 import requests
+from requests.adapters import HTTPAdapter, Retry
 import json
 import os
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+
 class AirPollutionApiClient:
     def __init__(self,api_key:str) -> None:
         """
@@ -19,6 +21,11 @@ class AirPollutionApiClient:
             raise Exception("API key is None.")
         self.api_key = api_key
         self.base_url = "http://api.openweathermap.org/data/2.5/air_pollution"
+        self.session = requests.Session()
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+
+        self.session.mount('http://', HTTPAdapter(max_retries=retries))
+        self.session.mount('https://', HTTPAdapter(max_retries=retries))
         
     def get_current_data(self,lat:int,long:int) -> json:
         """
@@ -35,7 +42,8 @@ class AirPollutionApiClient:
         - Exception: If the request to the API fails or returns a non-200 status code.
         """
         url = f"{self.base_url}?lat={lat}&lon={long}&appid={self.api_key}"
-        response = requests.get(url=url)
+
+        response = self.session.get(url=url)
         if response.status_code != 200:
             raise Exception( f"Failed to extract data from Air Pollution API. Status Code: {response.status_code}. Response: {response.text}")
         return response.json()['list']
@@ -58,7 +66,7 @@ class AirPollutionApiClient:
         - Exception: If the request to the API fails or returns a non-200 status code.
         """
         url = f"{self.base_url}/history?lat={lat}&lon={long}&start={start}&end={end}&appid={self.api_key}"
-        response = requests.get(url=url)
+        response = self.session.get(url=url)
         if response.status_code != 200:
             raise Exception( f"Failed to extract data from Air Pollution API. Status Code: {response.status_code}. Response: {response.text}")
         return response.json()['list']

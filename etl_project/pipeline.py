@@ -92,8 +92,9 @@ def extract_air_pollution_api(latlong_df:pd.DataFrame):
 def transform_air_pollution_df(air_pollution_df:pd.DataFrame):
     
     dtype = {
-        "created_at" :"datetime64",
+        "created_at" :"datetime64[ns]",
         "air_quality_index": "Int64",
+                "province_id": "Int64",
    
     }
     df = air_pollution_df.rename(columns={
@@ -112,6 +113,7 @@ def transform_air_pollution_df(air_pollution_df:pd.DataFrame):
     df['date_time'] =  df['date_time'].apply(lambda tstmp:  datetime.fromtimestamp(tstmp))
     df = df.dropna(subset=['date_time', 'province_id'])
     df = df.astype(dtype=dtype)
+    
     return df
     
 def extract_air_pollution_api_helper(api_key:str,start_date:str,end_date:str,date_format:str,lat:int,long:int) -> pd.DataFrame:
@@ -235,14 +237,16 @@ def run_air_pollution_pipleine():
 
     
     create_multi_table(table_names, pipeline_config['table_structure']['path'])
-    province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
-    load_df_to_postgres(df=province_df,chunk_size=CHUNK_SIZE,table='province',method='upsert')
-    population_df = extract_population_df(pronvince_df=province_df,file_path=pipeline_config['dataset_paths']['population'])
-    load_df_to_postgres(df=population_df,chunk_size=CHUNK_SIZE,table='population',method='upsert')
+    if postgresql_client.count_table(table_name='province') == 0:
+        province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
+        load_df_to_postgres(df=province_df,chunk_size=CHUNK_SIZE,table='province',method='upsert')
+    if postgresql_client.count_table(table_name='population') == 0:
+        population_df = extract_population_df(pronvince_df=province_df,file_path=pipeline_config['dataset_paths']['population'])
+        load_df_to_postgres(df=population_df,chunk_size=CHUNK_SIZE,table='population',method='upsert')
     latlong_df = generate_lat_long(provinces_id=pipeline_config['pipeline']['province_ids'])
     air_pollution_df = extract_air_pollution_api(latlong_df=latlong_df)
     air_pollution_df = transform_air_pollution_df(air_pollution_df=air_pollution_df)
-    load_df_to_postgres(df=air_pollution_df,chunk_size=CHUNK_SIZE,table='air_pollution',method='insert')
+    load_df_to_postgres(df=air_pollution_df,chunk_size=CHUNK_SIZE,table='air_pollution',method='upsert')
     
     
 if __name__ == "__main__":
