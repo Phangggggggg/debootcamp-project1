@@ -33,19 +33,28 @@ def create_provinces_df(file_path:str) -> pd.DataFrame:
     gdf.rename(columns=cols_mapping,inplace=True)
     df = gdf.drop(columns=['geometry','TAMBON_E','AMPHOE_E'])
     df['province_id'] = [i+1 for i in range(len(df))]
+    df['province_name'] = df['province_name'].str.strip()
+
     return df
 
 def create_population_df(pronvince_df:pd.DataFrame,file_path:str) -> pd.DataFrame:
 
+
     df = pd.read_excel(file_path,skiprows=3,skipfooter=2)
     df = df.dropna(how='all')  
     df.columns = df.columns.astype(str)
+
     regions = df['Region'].unique()
     df = df[(df['Age group'] == 'Total') & ~(df['Province'].isin(regions))]
-    df['Province'] = df['Province'].str.replace(" Province","")
+    df['Province'] = df['Province'].str.replace(" Province","").str.strip()
     numeric_columns = [col for col in df.columns if re.search(r'\d', col)]
-    df = pd.melt(df, id_vars=['Province'], value_vars=numeric_columns,value_name='year')
-    print(1)
+    df = pd.melt(df, id_vars=['Province'], value_vars=numeric_columns,value_name='num_population')
+    df = df.merge(pronvince_df[['province_name','province_id']], left_on=['Province'], right_on=['province_name'], how='left')
+    df = df.drop(columns=['Province','province_name'])
+    df = df.rename(columns={
+        "variable":"year"
+    })
+    return df
 
 def get_pipeline_config(config_path='etl_project/config.yaml'):
     if not Path(config_path).exists():
