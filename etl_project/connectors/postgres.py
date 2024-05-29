@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine, Table, MetaData,Column
+import pandas as pd
+from sqlalchemy import create_engine, Table, MetaData,Column,inspect,select,func
 from sqlalchemy.engine import URL, CursorResult
 from sqlalchemy.dialects import postgresql
 
@@ -32,6 +33,7 @@ class PostgreSqlClient:
         )
 
         self.engine = create_engine(connection_url)
+        self.inspector = inspect(self.engine)
 
     def select_all(self, table: Table) -> list[dict]:
         return [dict(row) for row in self.engine.execute(table.select()).all()]
@@ -72,3 +74,27 @@ class PostgreSqlClient:
             },
         )
         self.engine.execute(upsert_statement)
+        
+    def has_table(self,table_name:str):
+        return table_name in self.inspector.get_table_names()
+    
+    def get_table(self, table_name: str) -> Table:
+        if self.has_table(table_name):
+            return Table(table_name, MetaData(), autoload_with=self.engine)
+        else:
+            raise Exception(f"Table '{table_name}' does not exist in the database.")
+
+    def count_table(self,table_name:str):
+        table = self.get_table(table_name=table_name)
+        query = select([func.count()]).select_from(table)
+        count = self.engine.execute(query).scalar()
+        return count
+    
+    def execute_query(self, stmt):
+        with self.engine.connect() as connection:
+            result = connection.execute(stmt)
+            rows = result.fetchall()
+            column_names = result.keys()
+            # Create DataFrame from fetched data
+            df = pd.DataFrame(rows, columns=column_names)
+            return df

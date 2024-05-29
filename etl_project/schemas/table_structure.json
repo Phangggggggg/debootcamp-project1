@@ -1,6 +1,7 @@
 {
     "air_pollution": {
         "columns": [
+            {"name":"province_id","type":"INTEGER"},
             {"name":"lat","type":"DOUBLE PRECISION"},
             {"name":"long","type":"DOUBLE PRECISION"},
             {"name":"air_quality_index","type":"INTEGER"},
@@ -15,7 +16,7 @@
             {"name":"date_time", "type":"DATETIME"},
             {"name":"created_at", "type":"TIMESTAMP"}
         ], 
-        "primaryKey": [ "date_time"]
+        "primaryKey": [ "date_time","province_id"]
     },
     "province": {
         "columns": [
@@ -32,7 +33,7 @@
             {"name":"year", "type":"INTEGER"}, 
             {"name":"num_population", "type":"DOUBLE PRECISION"}
         ], 
-        "primaryKey":["year"]
+        "primaryKey":["year","province_id"]
     }, 
     "monthly_avg_pollutants_by_provinces": {
         "columns": [
