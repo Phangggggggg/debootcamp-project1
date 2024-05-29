@@ -10,10 +10,11 @@ from connectors.postgres import PostgreSqlClient
 from connectors.air_pollution_api import AirPollutionApiClient
 from datetime import datetime
 import os
-from sqlalchemy import Table, MetaData, Column, Integer, String, Float, DateTime,select
+from sqlalchemy import Table, MetaData, Column, Integer, String, Float, DateTime,select, inspect
 import json
 from pandas import json_normalize
-
+from connectors.metadata_logging import MetaDataLogging, MetaDataLoggingStatus
+from connectors.pipeline_logging import PipelineLogging
 
 def find_centroid(geom):
     geom = MultiPoint(geom.to_list())
@@ -233,19 +234,69 @@ def load_df_to_postgres(df:pd.DataFrame, table:str,method:Literal['insert','upse
 
 
 def run_air_pollution_pipleine():
-    
-    create_multi_table(table_names, pipeline_config['table_structure']['path'])
-    if postgresql_client.count_table(table_name='province') == 0:
-        province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
-        load_df_to_postgres(df=province_df,chunk_size=CHUNK_SIZE,table='province',method='upsert')
-    if postgresql_client.count_table(table_name='population') == 0:
-        population_df = extract_population_df(pronvince_df=province_df,file_path=pipeline_config['dataset_paths']['population'])
-        load_df_to_postgres(df=population_df,chunk_size=CHUNK_SIZE,table='population',method='upsert')
-    latlong_df = generate_lat_long(provinces_id=pipeline_config['pipeline']['province_ids'])
-    air_pollution_df = extract_air_pollution_api(latlong_df=latlong_df)
-    air_pollution_df = transform_air_pollution_df(air_pollution_df=air_pollution_df)
-    load_df_to_postgres(df=air_pollution_df,chunk_size=CHUNK_SIZE,table='air_pollution',method='upsert')
-    
+    #pipeline logging
+    pipeline_logging = PipelineLogging(
+        pipeline_name=pipeline_config.get("name"),
+        log_folder_path=pipeline_config.get("log_folder_path"),
+    )
+    pipeline_logging.logger.info("Starting pipeline run")
+    #metadata logging
+    metadata_logger = MetaDataLogging(
+        pipeline_name=pipeline_config.get("name"),
+        postgresql_client=postgresql_client,
+        config=pipeline_config.get("config"),
+    )
+    #run pipeline
+    try:
+        metadata_logger.log()  # log start
+
+        #create environment variables (if any)
+        pipeline_logging.logger.info("Getting pipeline environment variables")
+
+        #Create target table
+        pipeline_logging.logger.info("Creating tables in postgres")
+        create_multi_table(table_names, pipeline_config['table_structure']['path'])
+
+        # Extract and Load 
+        pipeline_logging.logger.info("Extracting & Loading data")
+        if postgresql_client.count_table(table_name='province') == 0:
+            province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
+            load_df_to_postgres(df=province_df,chunk_size=CHUNK_SIZE,table='province',method='upsert')
+        if postgresql_client.count_table(table_name='population') == 0:
+            population_df = extract_population_df(pronvince_df=province_df,file_path=pipeline_config['dataset_paths']['population'])
+            load_df_to_postgres(df=population_df,chunk_size=CHUNK_SIZE,table='population',method='upsert')
+        latlong_df = generate_lat_long(provinces_id=pipeline_config['pipeline']['province_ids'])
+        air_pollution_df = extract_air_pollution_api(latlong_df=latlong_df)
+        air_pollution_df = transform_air_pollution_df(air_pollution_df=air_pollution_df)
+        load_df_to_postgres(df=air_pollution_df,chunk_size=CHUNK_SIZE,table='air_pollution',method='upsert')
+        pipeline_logging.logger.info("Pipeline run successful")
+
+    # If error
+    except BaseException as e:
+        pipeline_logging.logger.error(f"Pipeline run failed. See detailed logs: {e}")
+        metadata_logger.log(
+            status=MetaDataLoggingStatus.RUN_FAILURE, logs=pipeline_logging.get_logs()
+        )  # log error
+        pipeline_logging.logger.handlers.clear()
+
+     # Checking what views exist in database
+    pipeline_logging.logger.info("Inspecting database views")
+    inspector = inspect(postgresql_client.engine)
+            
+    sql_folder_path = pipeline_config.get("sql_folder_path")
+    for sql_file in os.listdir(sql_folder_path):
+        view = sql_file.split(".")[0] # name of view to match the name of the sql file
+        file_path = os.path.join(sql_folder_path, sql_file)
+    if view not in inspector.get_view_names():
+        pipeline_logging.logger.info(f"View {view} does not exist - Creating view")
+        with open(file_path, 'r') as f:
+            sql_query = f.read()
+            postgresql_client.engine.execute(f"create view {view} as {sql_query};")
+            pipeline_logging.logger.info(f"Successfully created view {view}")
+    else:
+        pipeline_logging.logger.info(f"View {view} already exists in database")
+
+        
     
 if __name__ == "__main__":
     load_dotenv()

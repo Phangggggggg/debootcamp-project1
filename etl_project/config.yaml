@@ -1,13 +1,14 @@
-name: "Thailand Air Pollution ELT"
+name: "Thai Air Pollution ELT"
 pipeline:
-  chunk_size: 1500
+  chunk_size: 3000
   datetime_format: "%Y-%m-%d"
-  air_pollution_start_date: "2023-01-01"
-  air_pollution_end_date: "2024-04-29"
-  province_ids: [21,22,23,24,25,26,27,28,29]
+  air_pollution_start_date: "2018-01-01"
+  air_pollution_end_date: "2024-01-01"
+  province_ids: [1,2,3,4,5,6,7,8,9,10,11,12]
 dataset_paths:
   provinces: "etl_project/data/provinces.csv"
   population: "etl_project/data/population.xlsx"
 table_structure:
   path: "etl_project/schemas/table_structure.json"
-
+log_folder_path: "etl_project/logs"
+sql_folder_path: "etl_project/sql"
