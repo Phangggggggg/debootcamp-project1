@@ -76,11 +76,44 @@ def generate_lat_long(provinces_id):
     return df
 
 
-def extract_air_pollution_api(latlong_df:pd.DataFrame,start_date:str,end_date:str,date_format:str):
+
+
+def extract_air_pollution_api(latlong_df:pd.DataFrame):
+    dfs = []
     for idx,row in latlong_df.iterrows():
         province_id = row['province_id']
-        extract_air_pollution_api_helper(api_key=API_KEY,start_date=start_date,end_date=end_date,date_format=date_format,lat=row['lat'],long=row['long'])
-
+        data = extract_air_pollution_api_helper(api_key=API_KEY, start_date=pipeline_config['pipeline']['air_pollution_start_date'], end_date=pipeline_config['pipeline']['air_pollution_end_date'],
+                                             date_format=pipeline_config['pipeline']['datetime_format'], lat=row['lat'], long=row['long'])
+        df = json_normalize(data=data)
+        df['province_id'] = province_id
+        dfs.append(df)
+    return pd.concat(dfs)
+        
+def transform_air_pollution_df(air_pollution_df:pd.DataFrame):
+    
+    dtype = {
+        "created_at" :"datetime64",
+        "air_quality_index": "Int64",
+   
+    }
+    df = air_pollution_df.rename(columns={
+        'main.aqi': 'air_quality_index',
+        'components.co': 'co',
+        'components.no': 'no',
+        'components.no2': 'no2',
+           'components.so2': 'so2',
+        'components.o3': 'o3',
+         'components.nh3': 'nh3',
+            'components.pm10': 'pm10',
+                        'components.pm2_5': 'pm2_5',
+         'dt': 'date_time'
+    })
+    df['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    df['date_time'] =  df['date_time'].apply(lambda tstmp:  datetime.fromtimestamp(tstmp))
+    df = df.dropna(subset=['date_time', 'province_id'])
+    df = df.astype(dtype=dtype)
+    return df
+    
 def extract_air_pollution_api_helper(api_key:str,start_date:str,end_date:str,date_format:str,lat:int,long:int) -> pd.DataFrame:
     today_date = datetime.now()
     api_client = AirPollutionApiClient(api_key=api_key)
@@ -88,8 +121,7 @@ def extract_air_pollution_api_helper(api_key:str,start_date:str,end_date:str,dat
     end_date = datetime.strptime(end_date, date_format)
     start = int(start_date.timestamp())
     end =   int(end_date.timestamp())
-    
-    result = []
+
     if end_date < today_date:
         data = api_client.get_historical_data(
             lat=lat,
@@ -106,14 +138,14 @@ def extract_air_pollution_api_helper(api_key:str,start_date:str,end_date:str,dat
             long=long,
             start=start,
             end=end
-        )
-        today_data = api_client.get_current_data(
+        ) + api_client.get_current_data(
             lat=lat,
             long=long
         )
+        
     else:
         raise ValueError('End date cannot be in the future')
-     
+    return data
                       
 
     
@@ -178,7 +210,7 @@ def create_multi_table(table_names: list, file_location:str,):
             create(table_name=table_name, metadata=metadata, postgresql_client=postgresql_client)
 
 
-def load_df_to_postgres(df:pd.DataFrame,chunk_size:int, table:str,method:Literal['insert','upsert']):
+def load_df_to_postgres(df:pd.DataFrame, table:str,method:Literal['insert','upsert'],chunk_size:int):
     data = df.to_dict(orient='records')
  
     table = postgresql_client.get_table(table_name=table)
@@ -200,18 +232,24 @@ def load_df_to_postgres(df:pd.DataFrame,chunk_size:int, table:str,method:Literal
 
 def run_air_pollution_pipleine():
     
+
+    
     create_multi_table(table_names, pipeline_config['table_structure']['path'])
     province_df = extract_provinces_df(file_path=pipeline_config['dataset_paths']['provinces'])
-    load_df_to_postgres(df=province_df,chunk_size=1000,table='province',method='upsert')
+    load_df_to_postgres(df=province_df,chunk_size=CHUNK_SIZE,table='province',method='upsert')
     population_df = extract_population_df(pronvince_df=province_df,file_path=pipeline_config['dataset_paths']['population'])
-    load_df_to_postgres(df=population_df,chunk_size=1000,table='population',method='upsert')
+    load_df_to_postgres(df=population_df,chunk_size=CHUNK_SIZE,table='population',method='upsert')
     latlong_df = generate_lat_long(provinces_id=pipeline_config['pipeline']['province_ids'])
-    extract_air_pollution_api(latlong_df=latlong_df,start_date=pipeline_config['pipeline']['air_pollution_start_date'],end_date=pipeline_config['pipeline']['air_pollution_end_date'],date_format=pipeline_config['pipeline']['datetime_format'])
+    air_pollution_df = extract_air_pollution_api(latlong_df=latlong_df)
+    air_pollution_df = transform_air_pollution_df(air_pollution_df=air_pollution_df)
+    load_df_to_postgres(df=air_pollution_df,chunk_size=CHUNK_SIZE,table='air_pollution',method='insert')
+    
+    
 if __name__ == "__main__":
     load_dotenv()
     pipeline_config = get_pipeline_config()
     
-    
+    CHUNK_SIZE = pipeline_config['pipeline']['chunk_size']
     API_KEY = os.environ.get("API_KEY")
     LOGGING_SERVER_NAME = os.environ.get("LOGGING_SERVER_NAME")
     LOGGING_USERNAME = os.environ.get("LOGGING_USERNAME")

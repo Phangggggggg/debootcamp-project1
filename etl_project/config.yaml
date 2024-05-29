@@ -3,8 +3,8 @@ pipeline:
   chunk_size: 3000
   datetime_format: "%Y-%m-%d"
   air_pollution_start_date: "2018-01-01"
-  air_pollution_end_date: "2024-01-01"
-  province_ids: [1,2,3,4,5,6,7,8,9,10,11,12]
+  air_pollution_end_date: "2022-10-10"
+  province_ids: [1]
 dataset_paths:
   provinces: "etl_project/data/provinces.csv"
   population: "etl_project/data/population.xlsx"

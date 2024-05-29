@@ -2,8 +2,6 @@
     "air_pollution": {
         "columns": [
             {"name":"province_id","type":"INTEGER"},
-            {"name":"lat","type":"DOUBLE PRECISION"},
-            {"name":"long","type":"DOUBLE PRECISION"},
             {"name":"air_quality_index","type":"INTEGER"},
             {"name":"co","type":"DOUBLE PRECISION"},
             {"name":"no", "type":"DOUBLE PRECISION"}, 
@@ -12,9 +10,9 @@
             {"name":"so2", "type":"DOUBLE PRECISION"}, 
             {"name":"pm2_5", "type":"DOUBLE PRECISION"}, 
             {"name":"nh3", "type":"DOUBLE PRECISION"}, 
-            {"name":"pm10", "type":"DOUBLE PRECISION"}, 
+            {"name":"pm10", "type":"DOUBLE PRECISION"},
             {"name":"date_time", "type":"DATETIME"},
-            {"name":"created_at", "type":"TIMESTAMP"}
+            {"name":"created_at", "type":"DATETIME"}
         ], 
         "primaryKey": [ "date_time","province_id"]
     },
