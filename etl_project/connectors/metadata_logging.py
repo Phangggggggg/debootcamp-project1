@@ -1,4 +1,4 @@
-from connectors.postgres import PostgreSqlClient
+from .postgres import PostgreSqlClient
 from datetime import datetime, timezone
 from sqlalchemy import Table, Column, Integer, String, MetaData, JSON
 from sqlalchemy import insert, select, func
