@@ -1,5 +1,7 @@
+
 select 
     province_id
+    , province_name
     , dense_rank() OVER (PARTITION BY year, month ORDER BY total_co DESC) AS rank_co
     , total_co
     , dense_rank() OVER (PARTITION BY  year, month ORDER BY total_no DESC) AS rank_no
@@ -18,9 +20,10 @@ select
     , total_pm10
 from 
 	(select 
-		 province_id 
-		 , extract(year from date_time) as year 
-		 , extract(month from date_time) as month
+		 t1.province_id 
+		 , province_name 
+	    , cast(extract(year from date_time) as int) as year 
+	    , cast(extract(month from date_time) as int) as month
 		 , sum(co) as total_co
 		 , sum(no) as total_no
 		 , sum(no2) as total_no2
@@ -30,6 +33,9 @@ from
 		 , sum(nh3) as total_nh3
 		 , sum(pm10) as total_pm10
 	from 
-		air_pollution 
-	group by 1,2,3
+		air_pollution t1
+	left join 
+		province t2 on t1.province_id = t2.province_id 
+	group by 1,2,3,4
 	) t1
+order by 1
