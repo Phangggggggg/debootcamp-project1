@@ -6,13 +6,13 @@ from dotenv import load_dotenv
 import yaml
 import re
 from shapely import Point, MultiPoint
-from connectors import (
-    PostgreSqlClient,
-    AirPollutionApiClient,
-    MetaDataLogging,
-    MetaDataLoggingStatus,
-    PipelineLogging,
-)
+
+
+from etl_project.connectors.postgres import PostgreSqlClient
+from etl_project.connectors.air_pollution_api import AirPollutionApiClient
+from etl_project.connectors.metadata_logging import MetaDataLogging,MetaDataLoggingStatus
+from etl_project.connectors.pipeline_logging import PipelineLogging
+
 from datetime import datetime
 import os
 from sqlalchemy import (
@@ -379,8 +379,6 @@ if __name__ == "__main__":
     load_dotenv()
     pipeline_config = get_pipeline_config()
 
-  
-
     # Select physical table to create
     table_names = pipeline_config["table_names"]
     sql_folder_path = pipeline_config["sql_folder_path"]
@@ -391,6 +389,5 @@ if __name__ == "__main__":
     )
     
     while True:
-        print(1)
         schedule.run_pending()
         time.sleep(pipeline_config.get("schedule").get("poll_seconds"))
