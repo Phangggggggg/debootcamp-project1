@@ -336,7 +336,7 @@ def run_air_pollution_pipleine(pipeline_config):
                 postgresql_client=postgresql_client
             )
         latlong_df = generate_lat_long(
-            provinces_id=pipeline_config["pipeline"]["province_ids"],popostgresql_client=postgresql_client
+            provinces_id=pipeline_config["pipeline"]["province_ids"],postgresql_client=postgresql_client
         )
         air_pollution_df = extract_air_pollution_api(latlong_df=latlong_df,API_KEY=API_KEY)
         air_pollution_df = transform_air_pollution_df(air_pollution_df=air_pollution_df)
@@ -359,20 +359,21 @@ def run_air_pollution_pipleine(pipeline_config):
 
     # Checking what views exist in database
     pipeline_logging.logger.info("Inspecting database views")
-    inspector = inspect(postgresql_client.engine)
+    # inspector = inspect(postgresql_client.engine)
 
     sql_folder_path = pipeline_config.get("sql_folder_path")
     for sql_file in os.listdir(sql_folder_path):
         view = sql_file.split(".")[0]  # name of view to match the name of the sql file
         file_path = os.path.join(sql_folder_path, sql_file)
-    if view not in inspector.get_view_names():
-        pipeline_logging.logger.info(f"View {view} does not exist - Creating view")
-        with open(file_path, "r") as f:
-            sql_query = f.read()
-            postgresql_client.engine.execute(f"create view {view} as {sql_query};")
-            pipeline_logging.logger.info(f"Successfully created view {view}")
-    else:
-        pipeline_logging.logger.info(f"View {view} already exists in database")
+        if not postgresql_client.has_table(table_name=view):
+            pipeline_logging.logger.info(f"View {view} does not exist - Creating view")
+            with open(file_path, "r") as f:
+                sql_query = f.read()
+                postgresql_client.engine.execute(f"create view {view} as {sql_query};")
+                pipeline_logging.logger.info(f"Successfully created view {view}")
+        else:
+            pipeline_logging.logger.info(f"View {view} already exists in database")
+
 
 
 if __name__ == "__main__":
@@ -391,3 +392,5 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(pipeline_config.get("schedule").get("poll_seconds"))
+
+    # run_air_pollution_pipleine(pipeline_config=pipeline_config)

@@ -63,7 +63,7 @@
             {"name":"year", "type":"INTEGER"}
         ]
     },
-    "monthly_regulation_bt_provinces": {
+    "monthly_regulation_by_provinces": {
         "columns": [
             {"name":"province_id","type":"INTEGER"},
             {"name":"avg_air_quality_index","type":"DOUBLE PRECISION"},
@@ -96,7 +96,7 @@
             {"name":"year", "type":"INTEGER"}
         ]
     }, 
-    "air_quality_trend_nexxt_month": {
+    "air_quality_trend_next_month": {
         "columns": [
             {"name":"avg_air_quality_index","type":"DOUBLE PRECISION"},
             {"name":"province_id","type":"INTEGER"},
