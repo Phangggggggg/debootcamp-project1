@@ -359,13 +359,13 @@ def run_air_pollution_pipleine(pipeline_config):
 
     # Checking what views exist in database
     pipeline_logging.logger.info("Inspecting database views")
-    # inspector = inspect(postgresql_client.engine)
+    inspector = inspect(postgresql_client.engine)
 
     sql_folder_path = pipeline_config.get("sql_folder_path")
     for sql_file in os.listdir(sql_folder_path):
         view = sql_file.split(".")[0]  # name of view to match the name of the sql file
         file_path = os.path.join(sql_folder_path, sql_file)
-        if not postgresql_client.has_table(table_name=view):
+        if view not in inspector.get_view_names():
             pipeline_logging.logger.info(f"View {view} does not exist - Creating view")
             with open(file_path, "r") as f:
                 sql_query = f.read()

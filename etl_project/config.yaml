@@ -23,4 +23,4 @@ log_folder_path: "etl_project/logs"
 sql_folder_path: "etl_project/sql"
 schedule:
   run_seconds: 60
-  poll_seconds: 10
+  poll_seconds: 60
