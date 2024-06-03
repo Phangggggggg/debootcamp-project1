@@ -74,16 +74,3 @@ class AirPollutionApiClient:
   
 
 
-# load_dotenv()
-# api_key = os.environ.get("API_KEY")
-# api_client = AirPollutionApiClient(api_key=api_key)
-# air_pollution_start_date = "2018-01-01"
-# air_pollution_end_date =  "2023-01-01"
-# start_date = int(datetime.strptime(air_pollution_start_date, "%Y-%m-%d").timestamp())
-# end_date = int(datetime.strptime(air_pollution_end_date, "%Y-%m-%d").timestamp())
-# api_client.get_historical_data(
-#     lat=13.7563,
-#     long=100.5018,
-#     start=start_date,
-#     end=end_date
-# )
