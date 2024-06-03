@@ -39,7 +39,7 @@ def find_centroid(geom):
 
 
 def extract_provinces_df(file_path: str) -> pd.DataFrame:
-
+    """Read provinces.csv, exclude null values and rename columns"""
     cols_mapping = {"CHANGWAT_E": "province_name", "LAT": "lat", "LONG": "long"}
     df = pd.read_csv(file_path, encoding="utf-8")
     cols = ["TAMBON_E", "AMPHOE_E", "CHANGWAT_E", "LAT", "LONG"]
@@ -61,7 +61,7 @@ def extract_provinces_df(file_path: str) -> pd.DataFrame:
 
 
 def extract_population_df(pronvince_df: pd.DataFrame, file_path: str) -> pd.DataFrame:
-
+    """Read population.csv, exclude null values and rename columns"""
     dtype = {"year": "Int64", "num_population": "float64", "province_id": "Int64"}
 
     df = pd.read_excel(file_path, skiprows=3, skipfooter=2)
@@ -92,6 +92,7 @@ def extract_population_df(pronvince_df: pd.DataFrame, file_path: str) -> pd.Data
 
 
 def generate_lat_long(provinces_id,postgresql_client):
+    """Generate latitudes and longtitudes"""
     table = postgresql_client.get_table(table_name="province")
     stmt = select([table.c.province_id, table.c.lat, table.c.long]).where(
         table.c.province_id.in_(provinces_id)
@@ -101,6 +102,7 @@ def generate_lat_long(provinces_id,postgresql_client):
 
 
 def extract_air_pollution_api(latlong_df: pd.DataFrame,API_KEY:str):
+    """Using API key to extract data"""
     dfs = []
     for idx, row in latlong_df.iterrows():
         province_id = row["province_id"]
@@ -119,7 +121,7 @@ def extract_air_pollution_api(latlong_df: pd.DataFrame,API_KEY:str):
 
 
 def transform_air_pollution_df(air_pollution_df: pd.DataFrame):
-
+    """Rename columns and add datetime"""
     dtype = {
         "created_at": "datetime64[ns]",
         "air_quality_index": "Int64",
@@ -150,6 +152,7 @@ def transform_air_pollution_df(air_pollution_df: pd.DataFrame):
 def extract_air_pollution_api_helper(
     api_key: str, start_date: str, end_date: str, date_format: str, lat: int, long: int
 ) -> pd.DataFrame:
+    """Get historical data and current data combined from Air Pollution API"""
     today_date = datetime.now()
     api_client = AirPollutionApiClient(api_key=api_key)
     start_date = datetime.strptime(start_date, date_format)
@@ -173,6 +176,7 @@ def extract_air_pollution_api_helper(
 
 
 def get_pipeline_config(config_path="etl_project/config.yaml"):
+    """Get information from config file"""
     if not Path(config_path).exists():
         raise Exception(f"The given config path: {config_path} does not exist.")
     with open(config_path) as yaml_file:
@@ -180,8 +184,8 @@ def get_pipeline_config(config_path="etl_project/config.yaml"):
         return pipeline_config
 
 
-# Read table structure in json and create metadata
 def read_table_structure(table_name, file_location):
+    """Read table structure in json and create metadata"""
     # Read json file
     with open(file_location, "r") as file:
         table_definition = json.load(file)
@@ -225,19 +229,21 @@ def read_table_structure(table_name, file_location):
     return metadata
 
 
-# Write table
+
 def create(
     table_name: str, metadata: MetaData, postgresql_client: PostgreSqlClient
 ) -> None:
+    """Write single table to progres database"""
     postgresql_client.create_table(table_name=table_name, metadata=metadata)
 
 
-# Write multi tables
+
 def create_multi_table(
     table_names: list,
     file_location: str,
     postgresql_client
 ):
+    """Write multiple table to progres database"""
     for table_name in table_names:
         metadata = read_table_structure(table_name, file_location)
         if not postgresql_client.has_table(table_name=table_name):
@@ -251,6 +257,7 @@ def create_multi_table(
 def load_df_to_postgres(
     df: pd.DataFrame, table: str, method: Literal["insert", "upsert"], chunk_size: int,postgresql_client
 ):
+    """Load dataframe to progres database"""
     data = df.to_dict(orient="records")
 
     table = postgresql_client.get_table(table_name=table)
@@ -273,6 +280,7 @@ def load_df_to_postgres(
 
 
 def run_air_pollution_pipleine(pipeline_config):
+    """Pipleline to extract air pollution data and load it into database"""
     
     pipeline_logging = PipelineLogging(
         pipeline_name=pipeline_config.get("name"),
